@@ -1,105 +1,105 @@
-import { useEffect, useState } from 'react';
-import { Table, Button, Space, Popconfirm, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
-import { obtenerEmpresas, eliminarEmpresa } from '../services/empresaService';
+// src/componentes/ListadoEmpresa.jsx
+import { useState, useEffect } from "react";
+import { Table, Typography, Tag, Spin, message, Card } from "antd";
 
-const ListadoEmpresa = () => {
-  const [empresas, setEmpresas] = useState([]);
+const { Title } = Typography;
+
+export default function ListadoEmpresa() {
+  const [datos, setDatos] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const navigate = useNavigate();
 
-  // Función para cargar los datos desde el backend
-  const cargarEmpresas = async () => {
-    try {
-      setCargando(true);
-      const data = await obtenerEmpresas();
-      setEmpresas(data);
-    } catch (error) {
-      message.error('Error al cargar las empresas');
-      console.error(error);
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  // Se ejecuta una sola vez al cargar la pantalla
   useEffect(() => {
-    cargarEmpresas();
+    // Aquí puedes ajustar la ruta a tu API según corresponda
+    const cargarDatos = async () => {
+      try {
+        const respuesta = await fetch("http://localhost:3000/api/empresas"); // O la ruta de canchas/reservas
+        if (!respuesta.ok) throw new Error("Error en la red");
+
+        const json = await respuesta.json();
+        setDatos(json);
+      } catch (error) {
+        message.error("No se pudieron cargar los datos de las canchas");
+        console.error(error);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarDatos();
   }, []);
 
-  // Función para manejar el borrado
-  const handleEliminar = async (id) => {
-    try {
-      await eliminarEmpresa(id);
-      message.success('Empresa eliminada correctamente');
-      cargarEmpresas(); // Recargamos la tabla
-    } catch (error) {
-      message.error('Hubo un error al eliminar');
-    }
-  };
-
-  // Definición de las columnas de la tabla
+  // Configuración de las nuevas columnas solicitadas
   const columnas = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-    },
-    {
-      // Cambiá 'nombre' por el nombre exacto de la columna en tu base de datos
-      title: 'Nombre de la Empresa', 
-      dataIndex: 'nombre',
-      key: 'nombre',
-    },
-    // Podés agregar más columnas acá (ej: cuit, direccion) copiando el bloque anterior
-    {
-      title: 'Acciones',
-      key: 'acciones',
-      render: (_, registro) => (
-        <Space size="middle">
-          <Button 
-            type="primary" 
-            onClick={() => navigate(`/editar/${registro.id}`)}
-          >
-            Editar
-          </Button>
-          <Popconfirm
-            title="¿Estás seguro de eliminar esta empresa?"
-            onConfirm={() => handleEliminar(registro.id)}
-            okText="Sí"
-            cancelText="No"
-          >
-            <Button type="primary" danger>
-              Eliminar
-            </Button>
-          </Popconfirm>
-        </Space>
+      title: "Jugadores Faltantes",
+      dataIndex: "jugadoresFaltantes", // Asegúrate de que tu base de datos devuelva este campo
+      key: "jugadoresFaltantes",
+      render: (cantidad) => (
+        <Tag color={cantidad > 0 ? "blue" : "default"}>
+          {cantidad > 0 ? `Faltan ${cantidad}` : "Completo"}
+        </Tag>
       ),
+    },
+    {
+      title: "Dirección",
+      dataIndex: "direccion",
+      key: "direccion",
+    },
+    {
+      title: "Horario",
+      dataIndex: "horario",
+      key: "horario",
+    },
+    {
+      title: "Precio",
+      dataIndex: "precio",
+      key: "precio",
+      render: (precio) => `$${precio}`, // Muestra el precio formateado
+    },
+    {
+      title: "Estado",
+      dataIndex: "estado", // Ej: 'Disponible' o 'Reservado'
+      key: "estado",
+      render: (estado) => {
+        const esReservado = estado === "Reservado";
+        return (
+          <Tag color={esReservado ? "red" : "green"}>
+            {esReservado ? "Reservado" : "Disponible"}
+          </Tag>
+        );
+      },
     },
   ];
 
-  return (
-    <div style={{ padding: '20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <h2>Listado de Empresas</h2>
-        <Button 
-          type="primary" 
-          size="large"
-          onClick={() => navigate('/crear')}
-        >
-          Crear Nueva Empresa
-        </Button>
+  if (cargando) {
+    return (
+      <div style={{ textAlign: "center", marginTop: "50px" }}>
+        <Spin size="large" />
       </div>
-      
-      <Table 
-        columns={columnas} 
-        dataSource={empresas} 
-        rowKey="id" 
-        loading={cargando}
-        bordered
+    );
+  }
+
+  return (
+    <div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <Title level={2} style={{ margin: 0 }}>
+          Disponibilidad de Canchas y Partidos
+        </Title>
+      </div>
+
+      <Table
+        dataSource={datos}
+        columns={columnas}
+        rowKey="id"
+        pagination={{ pageSize: 5 }}
       />
     </div>
   );
-};
-
-export default ListadoEmpresa;
+}
