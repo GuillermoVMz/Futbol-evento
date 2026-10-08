@@ -1,9 +1,10 @@
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { Layout, Menu } from "antd";
 import EventosFutbol from "./componentes/EventosFutbol";
-import ListadoEmpresa from "./componentes/ListadoEmpresa"; // Tu componente actual
+import ListadoEmpresa from "./componentes/ListadoEmpresa";
+import InscripcionTorneo from "./componentes/InscripcionTorneo";
 
-const { Header, Content, Footer } = Layout;
+const { Header, Content } = Layout;
 
 function App() {
   return (
@@ -35,28 +36,17 @@ function App() {
           </Menu>
         </Header>
 
-        <Content style={{ padding: "0 50px", marginTop: "30px" }}>
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              minHeight: 380,
-              borderRadius: "8px",
-            }}
-          >
-            <Routes>
-              <Route path="/" element={<EventosFutbol />} />
-              <Route path="/empresas" element={<ListadoEmpresa />} />
-            </Routes>
-          </div>
+        <Content style={{ padding: "20px", margin: "0 auto", width: "100%", maxWidth: "1200px" }}>
+          <Routes>
+            <Route path="/" element={<EventosFutbol />} />
+            <Route path="/empresas" element={<ListadoEmpresa />} />
+            <Route path="/eventos/torneo/:id" element={<InscripcionTorneo />} />
+          </Routes>
         </Content>
-
-        <Footer style={{ textAlign: "center" }}>
-          Gestor de Eventos y Complejos ©2026
-        </Footer>
       </Layout>
     </BrowserRouter>
   );
 }
 
 export default App;
+
