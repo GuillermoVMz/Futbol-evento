@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Asegurate de poner el puerto correcto donde corre tu backend de Node/PostgreSQL
-const API_URL = 'http://localhost:3000/api/empresas'; 
+const API_URL = 'http://localhost:3000/api/canchas'; 
 
 export const obtenerEmpresas = async () => {
     const respuesta = await axios.get(API_URL);
