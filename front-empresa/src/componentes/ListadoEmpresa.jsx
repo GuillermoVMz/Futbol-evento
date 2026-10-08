@@ -1,73 +1,53 @@
-// src/componentes/ListadoEmpresa.jsx
-import { useState, useEffect } from "react";
-import { Table, Typography, Tag, Spin, message, Card } from "antd";
-
-const { Title } = Typography;
+import React, { useEffect, useState } from "react";
+import { Table, Spin, message, Tag } from "antd";
+import { obtenerEmpresas } from "../services/empresaService";
 
 export default function ListadoEmpresa() {
-  const [datos, setDatos] = useState([]);
+  const [canchas, setCanchas] = useState([]);
   const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    // Aquí puedes ajustar la ruta a tu API según corresponda
-    const cargarDatos = async () => {
+    const cargarCanchas = async () => {
       try {
-        const respuesta = await fetch("http://localhost:3000/api/empresas"); // O la ruta de canchas/reservas
-        if (!respuesta.ok) throw new Error("Error en la red");
-
-        const json = await respuesta.json();
-        setDatos(json);
+        // Aunque se llame obtenerEmpresas, sabemos que trae la tabla 'canchas'
+        const data = await obtenerEmpresas();
+        setCanchas(data);
       } catch (error) {
+        console.error("Error al conectar con el backend:", error);
         message.error("No se pudieron cargar los datos de las canchas");
-        console.error(error);
       } finally {
         setCargando(false);
       }
     };
-
-    cargarDatos();
+    cargarCanchas();
   }, []);
 
-  // Configuración de las nuevas columnas solicitadas
+  // Configuramos las columnas de Ant Design para que coincidan con tu SQL
   const columnas = [
     {
-      title: "Jugadores Faltantes",
-      dataIndex: "jugadoresFaltantes", // Asegúrate de que tu base de datos devuelva este campo
-      key: "jugadoresFaltantes",
-      render: (cantidad) => (
-        <Tag color={cantidad > 0 ? "blue" : "default"}>
-          {cantidad > 0 ? `Faltan ${cantidad}` : "Completo"}
-        </Tag>
-      ),
+      title: "Nombre de Cancha",
+      dataIndex: "nombre",
+      key: "nombre",
+      fontWeight: "bold",
     },
     {
-      title: "Dirección",
-      dataIndex: "direccion",
-      key: "direccion",
+      title: "Modalidad",
+      dataIndex: "tipo",
+      key: "tipo",
+      render: (tipo) => <Tag color="blue">{tipo}</Tag>,
     },
     {
-      title: "Horario",
-      dataIndex: "horario",
-      key: "horario",
+      title: "Precio por Hora",
+      dataIndex: "precio_hora",
+      key: "precio_hora",
+      render: (precio) => `$${Number(precio).toLocaleString()}`,
     },
     {
-      title: "Precio",
-      dataIndex: "precio",
-      key: "precio",
-      render: (precio) => `$${precio}`, // Muestra el precio formateado
-    },
-    {
-      title: "Estado",
-      dataIndex: "estado", // Ej: 'Disponible' o 'Reservado'
-      key: "estado",
-      render: (estado) => {
-        const esReservado = estado === "Reservado";
-        return (
-          <Tag color={esReservado ? "red" : "green"}>
-            {esReservado ? "Reservado" : "Disponible"}
-          </Tag>
-        );
-      },
+      title: "Techada",
+      dataIndex: "techada",
+      key: "techada",
+      render: (techada) =>
+        techada ? <Tag color="orange">Sí</Tag> : <Tag color="default">No</Tag>,
     },
   ];
 
@@ -80,24 +60,16 @@ export default function ListadoEmpresa() {
   }
 
   return (
-    <div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <Title level={2} style={{ margin: 0 }}>
-          Disponibilidad de Canchas y Partidos
-        </Title>
-      </div>
-
+    <div
+      style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px" }}
+    >
+      <h2 style={{ marginBottom: "20px" }}>
+        Disponibilidad de Canchas y Precios
+      </h2>
       <Table
-        dataSource={datos}
+        dataSource={canchas}
         columns={columnas}
-        rowKey="id"
+        rowKey="id_cancha"
         pagination={{ pageSize: 5 }}
       />
     </div>
