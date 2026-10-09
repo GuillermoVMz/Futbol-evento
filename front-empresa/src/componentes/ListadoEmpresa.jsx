@@ -1,22 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, message, Tag, Button } from "antd";
+import { Table, Spin, message, Tag, Button, Space, Radio } from "antd";
+import { EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import { obtenerEmpresas } from "../services/empresaService";
 
 export default function ListadoEmpresa() {
-  const [canchas, setCanchas] = useState([]);
+  const [canchasOriginales, setCanchasOriginales] = useState([]);
+  const [canchasFiltradas, setCanchasFiltradas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const cargarCanchas = async () => {
       try {
-        // Aunque se llame obtenerEmpresas, sabemos que trae la tabla 'canchas'
         const data = await obtenerEmpresas();
-        setCanchas(data);
+        setCanchasOriginales(data);
+        setCanchasFiltradas(data);
       } catch (error) {
-        console.error("Error al conectar con el backend:", error);
-        message.error("No se pudieron cargar los datos de las canchas");
+        message.error("Error al cargar las canchas");
       } finally {
         setCargando(false);
       }
@@ -24,52 +25,99 @@ export default function ListadoEmpresa() {
     cargarCanchas();
   }, []);
 
-  // Configuramos las columnas de Ant Design para que coincidan con tu SQL
+  const aplicarFiltro = (e) => {
+    const valor = e.target.value;
+    if (valor === "Todas") {
+      setCanchasFiltradas(canchasOriginales);
+    } else {
+      setCanchasFiltradas(
+        canchasOriginales.filter(
+          (c) => c.tipo === valor || (valor === "Techada" && c.techada),
+        ),
+      );
+    }
+  };
+
   const columnas = [
     {
-      title: "Nombre de Cancha",
-      dataIndex: "nombre",
-      key: "nombre",
-      fontWeight: "bold",
+      title: "Complejo",
+      key: "complejo",
+      render: (_, c) => (
+        <strong>{c.id_empresa === 1 ? "Complejo Golazo" : "Área 51"}</strong>
+      ),
     },
+    { title: "Nombre", dataIndex: "nombre", key: "nombre" },
     {
       title: "Modalidad",
       dataIndex: "tipo",
       key: "tipo",
-      render: (tipo) => <Tag color="blue">{tipo}</Tag>,
+      render: (t) => <Tag color="blue">{t}</Tag>,
     },
     {
-      title: "Precio por Hora",
+      title: "Precio/Hora",
       dataIndex: "precio_hora",
       key: "precio_hora",
-      render: (precio) => `$${Number(precio).toLocaleString()}`,
+      render: (p) => `$${Number(p).toLocaleString()}`,
     },
     {
-      title: "Techada",
-      dataIndex: "techada",
-      key: "techada",
-      render: (techada) =>
-        techada ? <Tag color="orange">Sí</Tag> : <Tag color="default">No</Tag>,
+      title: "Ubicación",
+      key: "mapa",
+      render: (_, c) => {
+        // Asignamos zonas simuladas
+        const direccion =
+          c.id_empresa === 1
+            ? "Bulevar España, Villa Maria, Cordoba"
+            : "Avenida Universidad, Villa Maria, Cordoba";
+        return (
+          <Button
+            type="link"
+            icon={<EnvironmentOutlined />}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`}
+            target="_blank"
+          >
+            Ver Mapa
+          </Button>
+        );
+      },
+    },
+    {
+      title: "Acciones",
+      key: "acciones",
+      render: (_, cancha) => (
+        <Button
+          type="primary"
+          onClick={() => navigate(`/reservar/cancha/${cancha.id_cancha}`)}
+        >
+          Reservar
+        </Button>
+      ),
     },
   ];
 
-  if (cargando) {
+  if (cargando)
     return (
-      <div style={{ textAlign: "center", marginTop: "50px" }}>
-        <Spin size="large" />
-      </div>
+      <Spin size="large" style={{ display: "block", margin: "50px auto" }} />
     );
-  }
 
   return (
-    <div
-      style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px" }}
-    >
-      <h2 style={{ marginBottom: "20px", color: "#141414" }}>
-        Disponibilidad de Canchas y Precios
-      </h2>
+    <div style={{ padding: "20px" }}>
+      <h2 style={{ marginBottom: "20px" }}>Disponibilidad de Canchas</h2>
+
+      {/* Botones de Filtro */}
+      <Radio.Group
+        onChange={aplicarFiltro}
+        defaultValue="Todas"
+        style={{ marginBottom: "20px" }}
+      >
+        <Radio.Button value="Todas">Todas</Radio.Button>
+        <Radio.Button value="Fútbol 5">Fútbol 5</Radio.Button>
+        <Radio.Button value="Fútbol 7">Fútbol 7</Radio.Button>
+        <Radio.Button value="Fútbol 11">Fútbol 11</Radio.Button>
+        <Radio.Button value="Techada">Solo Techadas</Radio.Button>
+      </Radio.Group>
+
       <Table
-        dataSource={canchas}
+        dataSource={canchasFiltradas}
         columns={columnas}
         rowKey="id_cancha"
         pagination={{ pageSize: 5 }}
