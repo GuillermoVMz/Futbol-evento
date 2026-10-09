@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, message, Tag } from "antd";
+import { Table, Spin, message, Tag, Button } from "antd";
+import { useNavigate } from "react-router-dom";
 import { obtenerEmpresas } from "../services/empresaService";
 
 export default function ListadoEmpresa() {
   const [canchas, setCanchas] = useState([]);
   const [cargando, setCargando] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const cargarCanchas = async () => {
@@ -63,7 +65,7 @@ export default function ListadoEmpresa() {
     <div
       style={{ backgroundColor: "white", padding: "20px", borderRadius: "8px" }}
     >
-      <h2 style={{ marginBottom: "20px" }}>
+      <h2 style={{ marginBottom: "20px", color: "#141414" }}>
         Disponibilidad de Canchas y Precios
       </h2>
       <Table

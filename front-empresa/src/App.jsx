@@ -3,6 +3,7 @@ import { Layout, Menu } from "antd";
 import EventosFutbol from "./componentes/EventosFutbol";
 import ListadoEmpresa from "./componentes/ListadoEmpresa";
 import InscripcionTorneo from "./componentes/InscripcionTorneo";
+import ReservaCancha from "./componentes/ReservaCancha";
 
 const { Header, Content } = Layout;
 
@@ -36,11 +37,19 @@ function App() {
           </Menu>
         </Header>
 
-        <Content style={{ padding: "20px", margin: "0 auto", width: "100%", maxWidth: "1200px" }}>
+        <Content
+          style={{
+            padding: "20px",
+            margin: "0 auto",
+            width: "100%",
+            maxWidth: "1200px",
+          }}
+        >
           <Routes>
             <Route path="/" element={<EventosFutbol />} />
             <Route path="/empresas" element={<ListadoEmpresa />} />
             <Route path="/eventos/torneo/:id" element={<InscripcionTorneo />} />
+            <Route path="/reservar/cancha/:id" element={<ReservaCancha />} />
           </Routes>
         </Content>
       </Layout>
@@ -49,4 +58,3 @@ function App() {
 }
 
 export default App;
-

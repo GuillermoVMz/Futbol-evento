@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // La URL apuntando al puerto 3000 de tu backend y a la ruta /api/canchas
-const API_URL = "http://localhost:3000/api/canchas";
+const API_URL = "http://26.97.240.65:3000/api/canchas";
 
 export const obtenerEmpresas = async () => {
   const respuesta = await axios.get(API_URL);

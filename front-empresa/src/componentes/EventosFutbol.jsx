@@ -33,7 +33,9 @@ export default function EventosFutbol() {
 
   return (
     <div>
-      <h2 style={{ marginBottom: "20px" }}>Próximos Partidos y Torneos</h2>
+      <h2 style={{ marginBottom: "20px", color: "#141414" }}>
+        Próximos Partidos y Torneos
+      </h2>
       <Row gutter={[16, 16]}>
         {eventos.map((evento) => (
           <Col xs={24} sm={12} md={8} key={evento.id}>
