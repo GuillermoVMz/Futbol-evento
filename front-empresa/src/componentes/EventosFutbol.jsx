@@ -1,7 +1,39 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Button, Row, Col, Spin, Tag, message } from "antd";
-import { getEventos } from "../services/eventoService";
+import { TrophyOutlined } from "@ant-design/icons";
+import { getEventos, urlImagenEvento } from "../services/eventoService";
+
+// Proporción 4:3 para que todas las tarjetas queden parejas, con o sin imagen
+const PROPORCION = "4 / 3";
+
+function Portada({ evento }) {
+  const url = urlImagenEvento(evento);
+  if (url) {
+    return (
+      <img
+        alt={evento.titulo}
+        src={url}
+        style={{ width: "100%", aspectRatio: PROPORCION, objectFit: "cover", display: "block" }}
+      />
+    );
+  }
+  // Sin imagen cargada: un lugar reservado con un trofeo
+  return (
+    <div
+      style={{
+        width: "100%",
+        aspectRatio: PROPORCION,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "rgba(148, 163, 184, 0.15)",
+      }}
+    >
+      <TrophyOutlined style={{ fontSize: 56, color: "#94a3b8" }} />
+    </div>
+  );
+}
 
 export default function EventosFutbol() {
   const navigate = useNavigate();
@@ -41,6 +73,7 @@ export default function EventosFutbol() {
           <Col xs={24} sm={12} md={8} key={evento.id}>
             <Card
               hoverable
+              cover={<Portada evento={evento} />}
               title={evento.titulo}
               extra={
                 <Tag

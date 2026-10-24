@@ -4,6 +4,7 @@ import { Form, Input, DatePicker, Select, Button, Card, Tag, Typography, Alert, 
 import { obtenerEmpresaPorId, obtenerDisponibilidad } from "../services/empresaService";
 import { crearReserva } from "../services/reservaService";
 import { obtenerSesion } from "../services/session";
+import MedioPago from "./MedioPago";
 
 const { Text } = Typography;
 
@@ -69,8 +70,13 @@ export default function ReservaCancha() {
         horario_fin: hhmm(turno.hora_fin),
         nombre_cliente: valores.nombre_cliente,
         telefono: valores.telefono,
+        medio_pago: valores.medio_pago,
       });
-      message.success("¡Reserva confirmada!");
+      message.success(
+        valores.medio_pago === "transferencia"
+          ? "¡Reserva confirmada! Recordá hacer la transferencia: el complejo marcará el pago al recibirla."
+          : "¡Reserva confirmada!",
+      );
       navigate("/mis-reservas");
     } catch (err) {
       message.error(err.response?.data?.mensaje || "No se pudo guardar la reserva");
@@ -120,7 +126,7 @@ export default function ReservaCancha() {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          initialValues={{ nombre_cliente: usuario?.nombre, telefono: usuario?.telefono }}
+          initialValues={{ nombre_cliente: usuario?.nombre, telefono: usuario?.telefono, medio_pago: "efectivo" }}
         >
           <Form.Item label="Nombre y Apellido" name="nombre_cliente" rules={[{ required: true, message: "Ingresá tu nombre" }]}>
             <Input placeholder="Ej: Lucas Martínez" />
@@ -164,6 +170,8 @@ export default function ReservaCancha() {
               options={opcionesTurno}
             />
           </Form.Item>
+
+          <MedioPago alias={cancha.alias_pago} titular={cancha.titular_pago} monto={cancha.precio_hora} />
 
           <Form.Item>
             <Button type="primary" htmlType="submit" block size="large" loading={enviando}>

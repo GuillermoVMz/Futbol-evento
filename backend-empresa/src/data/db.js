@@ -16,9 +16,13 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Supabase exige SSL; el PostgreSQL de Docker no lo soporta. Por defecto queda activado
+// (como siempre) y docker-compose.yml lo apaga con DB_SSL=false.
+const usarSSL = process.env.DB_SSL !== "false";
+
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // requerido por Supabase
+  ssl: usarSSL ? { rejectUnauthorized: false } : false,
 });
 
 pool.on("error", (err) => {

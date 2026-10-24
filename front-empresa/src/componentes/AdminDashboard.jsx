@@ -14,6 +14,7 @@ import AdminReservas from "./admin/AdminReservas";
 import AdminCanchas from "./admin/AdminCanchas";
 import AdminEventos from "./admin/AdminEventos";
 import AdminGastos from "./admin/AdminGastos";
+import AdminPago from "./admin/AdminPago";
 
 const plata = (n) => `$${Number(n || 0).toLocaleString()}`;
 
@@ -75,6 +76,7 @@ export default function AdminDashboard() {
     { key: "canchas", label: "Canchas y horarios", children: <AdminCanchas /> },
     { key: "eventos", label: "Eventos", children: <AdminEventos /> },
     { key: "gastos", label: "Gastos", children: <AdminGastos /> },
+    { key: "pagos", label: "Datos de pago", children: <AdminPago /> },
   ];
 
   return (

@@ -13,3 +13,5 @@ dist/
 # Logs y sistema
 *.log
 .DS_Store
+
+desktop.ini

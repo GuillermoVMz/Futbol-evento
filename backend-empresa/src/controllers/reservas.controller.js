@@ -2,9 +2,11 @@ import { pool } from "../data/db.js";
 import { esId, esFecha, esHora, hhmm, SQL_AHORA } from "../utils/validar.js";
 
 const ESTADOS = ["confirmada", "pagada", "cancelada"];
+const MEDIOS_PAGO = ["efectivo", "transferencia"];
 
 const SELECT_RESERVAS = `
-  SELECT r.*, c.nombre AS cancha, c.tipo, e.nombre_complejo AS complejo
+  SELECT r.*, c.nombre AS cancha, c.tipo, e.nombre_complejo AS complejo,
+         e.alias_pago, e.titular_pago
   FROM reservas r
   JOIN canchas c ON c.id_cancha = r.id_cancha
   JOIN empresas e ON e.id_empresa = r.id_empresa`;
@@ -19,12 +21,23 @@ export const crearReserva = async (req, res) => {
     if (!nombre_cliente || !telefono) {
       return res.status(400).json({ mensaje: "Nombre y teléfono son obligatorios" });
     }
+    const medio_pago = req.body.medio_pago ?? "efectivo";
+    if (!MEDIOS_PAGO.includes(medio_pago)) {
+      return res.status(400).json({ mensaje: `medio_pago debe ser: ${MEDIOS_PAGO.join(", ")}` });
+    }
 
     const cancha = await pool.query(
-      "SELECT id_empresa, precio_hora FROM canchas WHERE id_cancha = $1 AND activo = TRUE",
+      `SELECT c.id_empresa, c.precio_hora, e.alias_pago, e.titular_pago
+       FROM canchas c JOIN empresas e ON e.id_empresa = c.id_empresa
+       WHERE c.id_cancha = $1 AND c.activo = TRUE`,
       [id_cancha],
     );
     if (cancha.rowCount === 0) return res.status(404).json({ mensaje: "Cancha no disponible" });
+
+    // Solo se puede pagar por transferencia si el complejo cargó su alias y titular
+    if (medio_pago === "transferencia" && !(cancha.rows[0].alias_pago && cancha.rows[0].titular_pago)) {
+      return res.status(400).json({ mensaje: "Este complejo todavía no habilitó pagos por transferencia" });
+    }
 
     // El turno tiene que ser uno de los que el dueño habilitó
     const turno = await pool.query(
@@ -47,8 +60,8 @@ export const crearReserva = async (req, res) => {
     const precio = Math.round(cancha.rows[0].precio_hora);
     const { rows } = await pool.query(
       `INSERT INTO reservas
-         (id_empresa, id_cancha, id_usuario, fecha, horario_in, horario_fin, nombre_cliente, telefono, estado, precio)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'confirmada', $9) RETURNING *`,
+         (id_empresa, id_cancha, id_usuario, fecha, horario_in, horario_fin, nombre_cliente, telefono, estado, precio, medio_pago)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'confirmada', $9, $10) RETURNING *`,
       [
         cancha.rows[0].id_empresa,
         id_cancha,
@@ -59,6 +72,7 @@ export const crearReserva = async (req, res) => {
         nombre_cliente,
         telefono,
         precio,
+        medio_pago,
       ],
     );
     res.status(201).json(rows[0]);

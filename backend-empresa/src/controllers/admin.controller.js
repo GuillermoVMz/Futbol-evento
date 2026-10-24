@@ -29,3 +29,49 @@ export const obtenerResumen = async (req, res) => {
     res.status(500).json({ mensaje: "Error al obtener el resumen" });
   }
 };
+
+// ------- Datos para cobrar por transferencia (los ve el jugador al elegir ese medio de pago) -------
+// Alias bancario/billetera argentino: 6 a 20 caracteres con letras, números, puntos o guiones
+const ALIAS_VALIDO = /^[A-Za-z0-9.-]{6,20}$/;
+
+export const obtenerDatosPago = async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      "SELECT alias_pago, titular_pago FROM empresas WHERE id_empresa = $1",
+      [req.usuario.id_empresa],
+    );
+    res.json(rows[0] ?? { alias_pago: null, titular_pago: null });
+  } catch (error) {
+    console.error("obtenerDatosPago:", error);
+    res.status(500).json({ mensaje: "Error al obtener los datos de pago" });
+  }
+};
+
+export const guardarDatosPago = async (req, res) => {
+  try {
+    const alias = String(req.body.alias_pago ?? "").trim();
+    const titular = String(req.body.titular_pago ?? "").trim();
+
+    // Los dos vacíos = el complejo deja de aceptar transferencias (solo efectivo)
+    if (alias || titular) {
+      if (!ALIAS_VALIDO.test(alias)) {
+        return res.status(400).json({
+          mensaje: "El alias debe tener entre 6 y 20 caracteres: letras, números, puntos o guiones",
+        });
+      }
+      if (titular.length < 3 || titular.length > 100) {
+        return res.status(400).json({ mensaje: "Ingresá el nombre del titular (3 a 100 caracteres)" });
+      }
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE empresas SET alias_pago = $1, titular_pago = $2
+       WHERE id_empresa = $3 RETURNING alias_pago, titular_pago`,
+      [alias || null, titular || null, req.usuario.id_empresa],
+    );
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("guardarDatosPago:", error);
+    res.status(500).json({ mensaje: "Error al guardar los datos de pago" });
+  }
+};

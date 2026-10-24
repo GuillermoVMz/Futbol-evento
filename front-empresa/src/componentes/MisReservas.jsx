@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, List, Tag, Button, Popconfirm, Spin, message } from "antd";
+import { List, Tag, Button, Popconfirm, Spin, Typography, message } from "antd";
 import { obtenerMisReservas, cancelarMiReserva } from "../services/reservaService";
 
 const COLORES = { confirmada: "green", pagada: "blue", cancelada: "red" };
@@ -61,6 +61,18 @@ export default function MisReservas() {
                 {Number(r.precio).toLocaleString()}
               </p>
               <Tag color={COLORES[r.estado]}>{r.estado.toUpperCase()}</Tag>
+              <Tag>{r.medio_pago === "transferencia" ? "Transferencia" : "Efectivo"}</Tag>
+              {r.medio_pago === "transferencia" && r.estado === "confirmada" && r.alias_pago && (
+                <p style={{ margin: "5px 0" }}>
+                  <Typography.Text type="secondary">
+                    Transferí a{" "}
+                    <Typography.Text strong copyable>
+                      {r.alias_pago}
+                    </Typography.Text>{" "}
+                    (titular: {r.titular_pago})
+                  </Typography.Text>
+                </p>
+              )}
               {r.estado === "confirmada" && r.fecha >= hoy && (
                 <Popconfirm title="¿Cancelar esta reserva?" okText="Sí, cancelar" cancelText="No" onConfirm={() => cancelar(r.id_reserva)}>
                   <Button size="small" danger type="link">

@@ -34,9 +34,14 @@ export const obtenerMisCanchas = async (req, res) => {
 export const obtenerCanchaPorId = async (req, res) => {
   try {
     if (!esId(req.params.id)) return res.status(400).json({ mensaje: "Id inválido" });
-    const { rows } = await pool.query(`${BASE} WHERE c.id_cancha = $1 AND c.activo = TRUE`, [
-      req.params.id,
-    ]);
+    // Acá además se trae el alias y el titular del complejo, para mostrarlos si el jugador
+    // elige pagar por transferencia (en el listado público no hacen falta)
+    const { rows } = await pool.query(
+      `SELECT c.*, e.nombre_complejo AS complejo, e.direccion, e.alias_pago, e.titular_pago
+       FROM canchas c JOIN empresas e ON e.id_empresa = c.id_empresa
+       WHERE c.id_cancha = $1 AND c.activo = TRUE`,
+      [req.params.id],
+    );
     if (rows.length === 0) return res.status(404).json({ mensaje: "Cancha no encontrada" });
     res.json(rows[0]);
   } catch (error) {

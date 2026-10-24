@@ -43,6 +43,11 @@ export default function AdminReservas() {
     { title: "Turno", render: (_, r) => `${hhmm(r.horario_in)} - ${hhmm(r.horario_fin)}` },
     { title: "Precio", dataIndex: "precio", render: (p) => `$${Number(p).toLocaleString()}` },
     {
+      title: "Pago",
+      dataIndex: "medio_pago",
+      render: (m) => <Tag>{m === "transferencia" ? "Transferencia" : "Efectivo"}</Tag>,
+    },
+    {
       title: "Estado",
       dataIndex: "estado",
       render: (e) => <Tag color={COLORES[e]}>{e.toUpperCase()}</Tag>,

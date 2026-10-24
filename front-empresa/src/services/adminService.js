@@ -19,3 +19,14 @@ export const eliminarGasto = async (id) => {
   const { data } = await api.delete(`/gastos/${id}`);
   return data;
 };
+
+// ----- Datos para cobrar por transferencia -----
+export const obtenerDatosPago = async () => {
+  const { data } = await api.get("/admin/pago");
+  return data;
+};
+
+export const guardarDatosPago = async (datos) => {
+  const { data } = await api.put("/admin/pago", datos);
+  return data;
+};
