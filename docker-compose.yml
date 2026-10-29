@@ -1,0 +1,169 @@
+# =============================================================================
+# FÚTBOL EVENTO — infraestructura con Docker Compose
+#
+#                         ┌──────────────► frontend1 ┐
+#   Navegador ─► :80 ─► BALANCEADOR (Nginx)           ├─ estáticos React (2 réplicas)
+#                         ├──────────────► frontend2 ┘
+#                         │
+#                         ├──────────────► backend1 ┐
+#                         ├──────────────► backend2 ├─ API Node/Express (3 réplicas)
+#                         └──────────────► backend3 ┘
+#                                               │
+#                                               ▼
+#                                    db (PostgreSQL) ← ÚNICA base de datos
+#
+# Levantar todo:   docker compose up -d --build
+# Ver servicios:   docker compose ps
+# Apagar:          docker compose down        (agregar -v borra también los datos)
+# =============================================================================
+
+name: futbol-evento
+
+# -----------------------------------------------------------------------------
+# Plantillas reutilizables (YAML anchors): las réplicas son idénticas, solo
+# cambia el nombre. Así el JWT_SECRET y la conexión a la base son los MISMOS en
+# todos los nodos (requisito para que un token emitido por un nodo lo valide otro).
+# -----------------------------------------------------------------------------
+x-backend: &backend
+  image: futbol-evento-backend
+  build:
+    context: ./backend-empresa
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment:
+    PORT: 3000
+    DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD:-pajeronoduranada}@db:5432/postgres
+    DB_SSL: "false" # el PostgreSQL de Docker no usa SSL (Supabase sí)
+    JWT_SECRET: ${JWT_SECRET:-clave_secreta_jwt}
+    JWT_EXPIRES_IN: 8h
+  depends_on:
+    db:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+    start_period: 10s
+  networks:
+    - red_web # para que el balanceador lo alcance
+    - red_datos # para que alcance a la base
+
+x-frontend: &frontend
+  image: futbol-evento-frontend
+  build:
+    context: ./front-empresa
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/ > /dev/null || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 5
+  networks:
+    - red_web
+
+services:
+  # ---------------------------------------------------------------------------
+  # BASE DE DATOS — una sola instancia, compartida por todos los backends
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    container_name: futbol_db
+    hostname: db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pajeronoduranada}
+      POSTGRES_DB: postgres
+    ports:
+      # Solo accesible desde esta PC (DBeaver, pgAdmin, psql). No queda expuesta a la red.
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Los .sql de esta carpeta se ejecutan UNA vez, la primera vez que se crea el volumen
+      - ./backend-empresa/database:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      # -h 127.0.0.1 es a propósito: mientras corren los scripts de inicio, Postgres solo
+      # escucha por socket; por TCP responde recién cuando la base quedó lista de verdad.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - red_datos
+
+  # ---------------------------------------------------------------------------
+  # BACKEND — 3 réplicas de la API
+  # ---------------------------------------------------------------------------
+  backend1:
+    <<: *backend
+    container_name: futbol_backend1
+    hostname: backend1
+  backend2:
+    <<: *backend
+    container_name: futbol_backend2
+    hostname: backend2
+  backend3:
+    <<: *backend
+    container_name: futbol_backend3
+    hostname: backend3
+
+  # ---------------------------------------------------------------------------
+  # FRONTEND — 2 réplicas (Nginx sirviendo el build de React)
+  # ---------------------------------------------------------------------------
+  frontend1:
+    <<: *frontend
+    container_name: futbol_frontend1
+    hostname: frontend1
+  frontend2:
+    <<: *frontend
+    container_name: futbol_frontend2
+    hostname: frontend2
+
+  # ---------------------------------------------------------------------------
+  # BALANCEADOR — única puerta de entrada (máquina de acceso)
+  # ---------------------------------------------------------------------------
+  balanceador:
+    image: nginx:alpine
+    container_name: futbol_balanceador
+    hostname: balanceador
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./balanceador/nginx.conf:/etc/nginx/nginx.conf:ro
+    # Nginx resuelve los nombres de los nodos al arrancar: tienen que existir antes.
+    depends_on:
+      frontend1:
+        condition: service_healthy
+      frontend2:
+        condition: service_healthy
+      backend1:
+        condition: service_healthy
+      backend2:
+        condition: service_healthy
+      backend3:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1/nginx-health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - red_web
+
+# -----------------------------------------------------------------------------
+# REDES
+#   red_web   : balanceador <-> frontends <-> backends
+#   red_datos : backends <-> PostgreSQL. El balanceador y los frontends NO la ven,
+#               así que la base solo es alcanzable desde la capa de aplicación.
+# -----------------------------------------------------------------------------
+networks:
+  red_web:
+    driver: bridge
+  red_datos:
+    driver: bridge
+
+volumes:
+  postgres_data:
