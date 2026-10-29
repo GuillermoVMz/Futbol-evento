@@ -15,10 +15,10 @@ if (!process.env.DATABASE_URL) {
     "Falta DATABASE_URL. Copiá .env.example como .env y completalo con tu cadena de conexión de Supabase.",
   );
 }
-
+const isSupabese = process.env.DATABASE_URL.includes("supabase");
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }, // requerido por Supabase
+  ssl: isSupabese ? { rejectUnauthorized: false } : false, // requerido por Supabase
 });
 
 pool.on("error", (err) => {
