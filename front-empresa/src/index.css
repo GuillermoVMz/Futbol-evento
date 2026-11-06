@@ -1,0 +1,96 @@
+/* =========================================================
+   RESETEO BASE Y VARIABLES DE TEMA UNIFICADAS
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================================================
+   FORZADO DE TEMA (CLARO Y OSCURO UNIVERSAL)
+   ========================================================= */
+
+/* 🌙 MODO OSCURO */
+html[style*="color-scheme: dark"] body,
+html[style*="color-scheme: dark"] .ant-layout,
+html[style*="color-scheme: dark"] .ant-layout-content {
+  background-color: #0b132b !important;
+  color: #f8fafc !important;
+}
+
+/* Tarjetas en Modo Oscuro */
+html[style*="color-scheme: dark"] .ant-card,
+html[style*="color-scheme: dark"] div[class*="card"] {
+  background-color: #151e3d !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Textos y Títulos en Modo Oscuro */
+html[style*="color-scheme: dark"] h1,
+html[style*="color-scheme: dark"] h2,
+html[style*="color-scheme: dark"] h3,
+html[style*="color-scheme: dark"] h4,
+html[style*="color-scheme: dark"] h5,
+html[style*="color-scheme: dark"] .ant-typography,
+html[style*="color-scheme: dark"] .ant-card-head-title,
+html[style*="color-scheme: dark"] th.ant-table-cell {
+  color: #ffffff !important;
+}
+
+html[style*="color-scheme: dark"] p,
+html[style*="color-scheme: dark"] span:not(.ant-tag),
+html[style*="color-scheme: dark"] td.ant-table-cell,
+html[style*="color-scheme: dark"] label {
+  color: #cbd5e1 !important;
+}
+
+/* ☀️ MODO CLARO */
+html[style*="color-scheme: light"] body,
+html[style*="color-scheme: light"] .ant-layout,
+html[style*="color-scheme: light"] .ant-layout-content {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Tarjetas en Modo Claro */
+html[style*="color-scheme: light"] .ant-card,
+html[style*="color-scheme: light"] div[class*="card"] {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+html[style*="color-scheme: light"] h1,
+html[style*="color-scheme: light"] h2,
+html[style*="color-scheme: light"] h3,
+html[style*="color-scheme: light"] h4 {
+  color: #0f172a !important;
+}

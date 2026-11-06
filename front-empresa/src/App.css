@@ -1,0 +1,22 @@
+/* EFECTOS MINIMALISTAS PARA TARJETAS DE EVENTOS Y TORNEOS */
+.tarjeta-evento-hover {
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tarjeta-evento-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Estilo para los botones principales */
+.ant-btn-primary {
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+/* Adaptación fluida de tablas */
+.ant-table-wrapper {
+  overflow-x: auto;
+}

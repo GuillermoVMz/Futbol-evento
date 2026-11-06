@@ -1,0 +1,15 @@
+# Dependencias
+node_modules/
+**/node_modules/
+
+# Variables de entorno (secretos): NUNCA se suben
+.env
+**/.env
+
+# Build
+dist/
+**/dist/
+
+# Logs y sistema
+*.log
+.DS_Store
